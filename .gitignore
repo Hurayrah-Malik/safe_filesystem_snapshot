@@ -1,0 +1,14 @@
+# Python
+__pycache__/
+*.pyc
+
+# Virtual environments
+.venv/
+
+# OS / editor noise
+.DS_Store
+.vscode/
+
+# Outputs from this project
+manifest.json
+*.manifest.json
