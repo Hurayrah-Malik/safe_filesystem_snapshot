@@ -1,0 +1,13 @@
+README.md
+pyproject.toml
+src/safe_fs_snapshot/__init__.py
+src/safe_fs_snapshot/cli.py
+src/safe_fs_snapshot/diff.py
+src/safe_fs_snapshot/hashing.py
+src/safe_fs_snapshot/ignore.py
+src/safe_fs_snapshot/snapshot.py
+src/safe_fs_snapshot.egg-info/PKG-INFO
+src/safe_fs_snapshot.egg-info/SOURCES.txt
+src/safe_fs_snapshot.egg-info/dependency_links.txt
+src/safe_fs_snapshot.egg-info/top_level.txt
+tests/test_smoke.py
