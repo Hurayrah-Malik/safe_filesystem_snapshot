@@ -55,29 +55,64 @@ def main() -> int:
         print(f"Error: path is not a directory: {args.path}")
         raise SystemExit(1)
 
-    # 3) Normalize to an absolute path for internal use
+    # if input was ./src , this prints ./src ... its a pathlib.Path object
+    # printing objects utilizes their .__str__() function. so Path.__str__() is used to show string of path object
+    # print(f"args.path: {args.path}")
+
+    # 3) .resolve "normalizes" meaning it changes from relative path to absolute, so its more consistent and usable
+    # think of root_dir as “A pointer to a location in the filesystem”
+    # still a pathlib.Path object
+
     root_dir = args.path.resolve()
 
+    # prints absolute path
     print("Normalized directory path:", root_dir)
 
-    # List direct children (top-level only).
-    # This does NOT recurse into subfolders.
-    print("Direct children:")
+    # Next step: iterative traversal skeleton.
 
-    # iterdir() yields Path objects for each entry inside the directory.
-    for entry in root_dir.iterdir():
-        # entry.name is just the last part (file/folder name), not the full path.
-        # is_dir() asks the OS if this entry is a directory.
-        # is_file() asks the OS if this entry is a regular file.
-        if entry.is_dir():
-            kind = "DIR"
-        elif entry.is_file():
-            kind = "FILE"
-        else:
-            # This can happen for special filesystem entries.
-            kind = "OTHER"
+    # We are NOT recursing yet. We are NOT listing files yet.
+    # We are only proving how a "stack of directories to scan" works.
+    print("Traversal skeleton:")
 
-        print(f"- {kind}: {entry.name}")
+    # A stack is just a Python list we use as "work left to do".
+    # Start with ONE directory: the root directory the user provided.
+    stack = [root_dir]
+
+    # Safety: limit how many directories we scan during learning,
+    # so we don't print thousands of lines.
+    max_dirs_to_scan = 3
+    dirs_scanned = 0
+
+    # While there is still work left, keep going.
+    while stack:
+        # pop() removes and returns the LAST item in the list.
+        current_dir = stack.pop()
+
+        dirs_scanned += 1
+        if dirs_scanned > max_dirs_to_scan:
+            break
+
+        print("Scanning:", current_dir)
+
+        # NEW: list the entries inside the directory we are scanning.
+        # This is the same idea as your old "Direct children" code,
+        # but now it runs for whatever directory we popped from the stack.
+        print("Children of current_dir:")
+
+        # Get all entries (files/folders) inside current_dir.
+        # list(...) forces the directory listing to happen immediately.
+        entries = list(current_dir.iterdir())
+
+        for entry in entries:
+            if entry.is_dir():
+                stack.append(entry)
+                kind = "DIR"
+            elif entry.is_file():
+                kind = "FILE"
+            else:
+                kind = "OTHER"
+
+            print(f"- {kind}: {entry.name}")
 
     return 0
 
