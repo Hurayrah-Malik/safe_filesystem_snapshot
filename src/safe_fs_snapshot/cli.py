@@ -19,6 +19,8 @@ import argparse
 
 from pathlib import Path
 
+from collections import deque
+
 
 def main() -> int:
     """
@@ -99,14 +101,26 @@ def main() -> int:
         # but now it runs for whatever directory we popped from the stack.
         print("Children of current_dir:")
 
-        # Get all entries (files/folders) inside current_dir.
-        # list(...) forces the directory listing to happen immediately.
-        entries = list(current_dir.iterdir())
+        # Try to list entries in the directory.
+        # This can fail due to permissions or because the directory disappears.
+        try:
+            entries = list(current_dir.iterdir())
+        except PermissionError:
+            print(f"WARNING: permission denied reading: {current_dir}")
+            # Skip this directory and move on to the next one in the stack.
+            continue
+        except FileNotFoundError:
+            print(f"WARNING: directory disappeared: {current_dir}")
+            continue
+        except OSError as e:
+            # Catch-all for other OS-level issues.
+            print(f"WARNING: failed to read: {current_dir} ({e})")
+            continue
 
         for entry in entries:
             if entry.is_dir():
-                stack.append(entry)
                 kind = "DIR"
+                stack.append(entry)  # schedule directory to be scanned later
             elif entry.is_file():
                 kind = "FILE"
             else:
