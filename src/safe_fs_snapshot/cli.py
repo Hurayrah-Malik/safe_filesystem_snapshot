@@ -99,7 +99,7 @@ def main() -> int:
         # NEW: list the entries inside the directory we are scanning.
         # This is the same idea as your old "Direct children" code,
         # but now it runs for whatever directory we popped from the stack.
-        print("Children of current_dir :")
+        print("Children of  current_dir :")
 
         # Try to list entries in the directory.
         # This can fail due to permissions or because the directory disappears.
