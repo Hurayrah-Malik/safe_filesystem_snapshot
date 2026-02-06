@@ -106,7 +106,7 @@ def main() -> int:
         try:
             entries = list(current_dir.iterdir())
         except PermissionError:
-            print(f"WARNING: permission denied reading: {current_dir}")
+            print(f"WARNING: permission denied  reading: {current_dir}")
             # Skip this directory and move on to the next one in the stack.
             continue
         except FileNotFoundError:
