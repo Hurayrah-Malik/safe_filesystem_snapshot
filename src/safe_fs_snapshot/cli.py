@@ -110,7 +110,7 @@ def main() -> int:
             # Skip this directory and move on to the next one in the stack.
             continue
         except FileNotFoundError:
-            print(f"WARNING: directory disappeared : {current_dir}")
+            print(f"WARNING: directory disappeared: {current_dir}")
             continue
         except OSError as e:
             # Catch-all for other OS-level issues.
