@@ -91,14 +91,24 @@ def main() -> int:
             elif entry.is_file():
                 kind = "FILE"
 
-                relative_path = entry.relative_to(root_dir)
-                entry_stats = entry.stat()
-                entry_size = entry_stats.st_size
-                entry_mtime = entry_stats.st_mtime
+                try:
+                    relative_path = entry.relative_to(root_dir)
+                    entry_stats = entry.stat()
+                    entry_size = entry_stats.st_size
+                    entry_mtime = entry_stats.st_mtime
+                except PermissionError:
+                    print(f"WARNING: permission denied  reading: {entry}")
+                    continue
+                except FileNotFoundError:
+                    print(f"WARNING: file disappeared: {entry}")
+                    continue
+                except OSError as e:
+                    print(f"WARNING: failed to read: {entry} ({e})")
+                    continue
 
                 files_snapshot.append(
                     {
-                        "relative_path": relative_path,
+                        "relative_path": relative_path.as_posix(),
                         "size": entry_size,
                         "mtime": entry_mtime,
                     }
@@ -108,6 +118,10 @@ def main() -> int:
                 kind = "OTHER"
 
             print(f"- {kind}: {entry.name}")
+
+    # sort the file snapshot by the value of "relative_path" of each dictionary in the list (alphebetically)
+    files_snapshot.sort(key=lambda f: f["relative_path"])
+
     print(f"file_snapshot: {files_snapshot}")
 
     return 0
