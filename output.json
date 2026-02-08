@@ -1,0 +1,57 @@
+{
+  "scan_root": "C:/Users/huray/dev/Personal/Python systems programming/Safe_Filesystem_Snapshot/src",
+  "created_at": "2026-02-07T23:13:09.943904",
+  "files_count": 10,
+  "files": [
+    {
+      "relative_path": "safe_fs_snapshot.egg-info/PKG-INFO",
+      "size": 143,
+      "mtime": 1769915223.1627476
+    },
+    {
+      "relative_path": "safe_fs_snapshot.egg-info/SOURCES.txt",
+      "size": 406,
+      "mtime": 1769915223.1702735
+    },
+    {
+      "relative_path": "safe_fs_snapshot.egg-info/dependency_links.txt",
+      "size": 1,
+      "mtime": 1769915223.1642542
+    },
+    {
+      "relative_path": "safe_fs_snapshot.egg-info/top_level.txt",
+      "size": 17,
+      "mtime": 1769915223.1647608
+    },
+    {
+      "relative_path": "safe_fs_snapshot/__init__.py",
+      "size": 14,
+      "mtime": 1769908663.8537896
+    },
+    {
+      "relative_path": "safe_fs_snapshot/cli.py",
+      "size": 1693,
+      "mtime": 1770523220.928637
+    },
+    {
+      "relative_path": "safe_fs_snapshot/diff.py",
+      "size": 0,
+      "mtime": 1769905323.75148
+    },
+    {
+      "relative_path": "safe_fs_snapshot/hashing.py",
+      "size": 0,
+      "mtime": 1769905330.2840414
+    },
+    {
+      "relative_path": "safe_fs_snapshot/ignore.py",
+      "size": 0,
+      "mtime": 1769905335.417885
+    },
+    {
+      "relative_path": "safe_fs_snapshot/snapshot.py",
+      "size": 4310,
+      "mtime": 1770523927.9372668
+    }
+  ]
+}
