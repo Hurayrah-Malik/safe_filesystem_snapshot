@@ -1,93 +1,64 @@
 """
-cli.py
+cli.py - Command-Line Interface (entry point)
 
-This file is the command-line entry point for your tool.
-
-In this step we introduce argparse:
-- argparse is the standard library module for reading command-line arguments
-- we create an ArgumentParser object (it describes what args we accept)
-- we print the help text to confirm it exists and is configured
+Runs when a user types: python -m safe_fs_snapshot.cli ./some_directory
+The "front door" of the program: reads input, validates, traverses directories.
+See python_study.py for detailed explanations of every concept used here.
 """
 
-# -----------------------------
-# Import: argparse (standard library)
-# -----------------------------
-# argparse is a built-in Python module (no pip install needed).
-# It provides tools to define command-line arguments like:
-#   mytool snapshot DIR --output manifest.json
-import argparse
-
-from pathlib import Path
-
-from collections import deque
+import argparse  # Built-in module for reading command-line arguments
+from pathlib import Path  # Object-oriented filesystem paths
+from collections import deque  # Double-ended queue (reserved for future use)
 
 
 def main() -> int:
-    """
-    Program entry point.
+    """Program entry point. Returns 0 on success, 1 on error (exit code convention)."""
 
-    For now, we create the parser and print its help text.
-    This lets you SEE what argparse is building before we parse any real arguments.
-    """
-
-    # Create the parser object.
-    # Think: "a description of what command-line args my program supports".
+    # --- Argument parsing ---
+    # Create parser, define one required positional arg named "path"
+    # "path" = the label/name, type=Path = auto-convert string -> Path object
     parser = argparse.ArgumentParser(
-        prog="safe-fs-snapshot",  # the program name shown in help output
+        prog="safe-fs-snapshot",
         description="Create deterministic filesystem manifests and diff them.",
     )
-
-    # Positional argument:
-    # This means the user MUST supply a value, in order.
     parser.add_argument(
         "path",
-        type=Path,  # convert string -> Path immediately
+        type=Path,
         help="Path to the directory to scan",
     )
 
+    # parse_args() reads CLI input, returns a Namespace (container with dot access)
+    # If user provides no args, argparse auto-prints error and exits before our code runs
     args = parser.parse_args()
 
-    # 1) Check that the path exists
+    # --- Path validation ---
+    # argparse does NOT check if the path exists on disk, only converts the string.
+    # We must verify: 1) path exists, 2) it's a directory (not a file)
     if not args.path.exists():
         print(f"Error: path does not exist: {args.path}")
         raise SystemExit(1)
 
-    # 2) Check that the path is a directory (not a file)
     if not args.path.is_dir():
         print(f"Error: path is not a directory: {args.path}")
         raise SystemExit(1)
 
-    # if input was ./src , this prints ./src ... its a pathlib.Path object
-    # printing objects utilizes their .__str__() function. so Path.__str__() is used to show string of path object
-    # print(f"args.path: {args.path}")
-
-    # 3) .resolve "normalizes" meaning it changes from relative path to absolute, so its more consistent and usable
-    # think of root_dir as “A pointer to a location in the filesystem”
-    # still a pathlib.Path object
-
+    # --- Normalize to absolute path ---
+    # .resolve() converts relative -> absolute and cleans up ".." and "."
     root_dir = args.path.resolve()
-
-    # prints absolute path
     print("Normalized directory path:", root_dir)
 
-    # Next step: iterative traversal skeleton.
-
-    # We are NOT recursing yet. We are NOT listing files yet.
-    # We are only proving how a "stack of directories to scan" works.
+    # --- Iterative directory traversal (depth-first using a stack) ---
+    # Stack = list used as a to-do list of directories to scan.
+    # pop() from end = depth-first. See python_study.py Concept 6 for details.
     print("Traversal skeleton:")
-
-    # A stack is just a Python list we use as "work left to do".
-    # Start with ONE directory: the root directory the user provided.
     stack = [root_dir]
 
-    # Safety: limit how many directories we scan during learning,
-    # so we don't print thousands of lines.
+    # Safety limit for learning (will be removed later)
     max_dirs_to_scan = 3
     dirs_scanned = 0
 
-    # While there is still work left, keep going.
+    files_snapshot = []
     while stack:
-        # pop() removes and returns the LAST item in the list.
         current_dir = stack.pop()
 
         dirs_scanned += 1
@@ -95,41 +66,54 @@ def main() -> int:
             break
 
         print("Scanning:", current_dir)
-
-        # NEW: list the entries inside the directory we are scanning.
-        # This is the same idea as your old "Direct children" code,
-        # but now it runs for whatever directory we popped from the stack.
         print("Children of  current_dir :")
 
-        # Try to list entries in the directory.
-        # This can fail due to permissions or because the directory disappears.
+        # List directory contents. Can fail due to permissions or race conditions.
+        # try/except prevents one bad directory from crashing the whole scan.
+        # "continue" skips to the next directory in the stack.
         try:
             entries = list(current_dir.iterdir())
         except PermissionError:
             print(f"WARNING: permission denied  reading: {current_dir}")
-            # Skip this directory and move on to the next one in the stack.
             continue
         except FileNotFoundError:
             print(f"WARNING: directory disappeared: {current_dir}")
             continue
         except OSError as e:
-            # Catch-all for other OS-level issues.
             print(f"WARNING: failed to read: {current_dir} ({e})")
             continue
 
+        # Classify each entry and schedule subdirectories for later scanning
         for entry in entries:
             if entry.is_dir():
                 kind = "DIR"
-                stack.append(entry)  # schedule directory to be scanned later
+                stack.append(entry)  # add to stack so it gets scanned later
             elif entry.is_file():
                 kind = "FILE"
+
+                relative_path = entry.relative_to(root_dir)
+                entry_stats = entry.stat()
+                entry_size = entry_stats.st_size
+                entry_mtime = entry_stats.st_mtime
+
+                files_snapshot.append(
+                    {
+                        "relative_path": relative_path,
+                        "size": entry_size,
+                        "mtime": entry_mtime,
+                    }
+                )
+
             else:
                 kind = "OTHER"
 
             print(f"- {kind}: {entry.name}")
+    print(f"file_snapshot: {files_snapshot}")
 
     return 0
 
 
+# Runs main() only when executed directly (not when imported).
+# raise SystemExit passes the exit code to the OS.
 if __name__ == "__main__":
     raise SystemExit(main())
