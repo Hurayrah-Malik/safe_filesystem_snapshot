@@ -104,17 +104,49 @@ def verify_directory(directory: Path):
         raise SystemExit(1)
 
 
+# verify that the snapshot file actually exsists
+def verify_snapshot_file(snapshot_path: Path):
+    if not snapshot_path.exists():
+        print(f"the file: {snapshot_path.stem}, doesnt exist")
+        raise SystemExit(1)
+
+    # if not snapshot_path.is_dir():
+    #     print(f"Error: path is not a directory: {}")
+    #     raise SystemExit(1)
+
+
 # write the snapshot to the file
-def write_snapshot(snapshot: list, : Path):
-    root_dir = root_dir.resolve()
+def write_snapshot(snapshot: list, scanned_directory: Path, snapshot_name: str):
+    scanned_directory = scanned_directory.resolve()
+    snapshot_storage_path = get_storage_dir()
     created_at = datetime.now().isoformat()
     file_count = len(snapshot)
     wrapper = {
-        "scan_root": root_dir.as_posix(),
+        "scanned_directory": scanned_directory.as_posix(),
         "created_at": created_at,
         "files_count": file_count,
         "files": snapshot,
     }
 
-    with open("output.json", "w") as f:
+    with open(snapshot_storage_path / f"{snapshot_name}.json", "w") as f:
         json.dump(wrapper, f, indent=2)
+
+
+# print out the data of a single snapshot
+def list_snapshots():
+    snapshot_storage_path = get_storage_dir()
+    # get a list of all files in that snapshot directory
+    snapshots = list(snapshot_storage_path.iterdir())
+    for snapshot in snapshots:
+        print(snapshot.stem)
+
+
+# show details of a single snapshot
+def show_snapshot(snapshot_name: str):
+    snapshot_file_path = get_storage_dir() / f"{snapshot_name}.json"
+    # check if that snapshot actually
+    verify_snapshot_file(snapshot_file_path)
+    # open the correct snapshot json, then print out its data
+    with open(snapshot_file_path, "r") as f:
+        snapshot_data = json.load(f)
+        print(snapshot_data)

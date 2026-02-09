@@ -1,0 +1,3 @@
+v1.0 - Initial release
+- Added greet function
+- Added add function

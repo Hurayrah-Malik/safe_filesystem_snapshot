@@ -11,6 +11,8 @@ Example commands:
 
 import argparse  # Built-in module for reading command-line arguments
 from pathlib import Path  # Object-oriented filesystem paths
+from safe_fs_snapshot import snapshot
+from datetime import datetime
 
 
 def main() -> int:
@@ -47,7 +49,7 @@ def main() -> int:
     # So only the "scan" command expects a directory path.
     # Example: safe-fs-snapshot scan ./my_project
     scan_parser.add_argument(
-        "path",
+        "directory_to_scan",
         type=Path,
         help="Path to the directory to scan",
     )
@@ -106,17 +108,34 @@ def main() -> int:
     # Route to the right function based on which command was typed.
     # This is the if/elif chain we talked about!
     if args.command == "scan":
-        print(f"Scanning directory: {args.path}")
-        print(f"name of snapshot created: {args.name}")
+        # create a snapshot of the directory
+        print(f"Scanning directory: {args.directory_to_scan}")
+        files_list = snapshot.create_snapshot(args.directory_to_scan)
+
+        # write the snapshot to the computer.
+        # if user didnt specify name, then name yourself
+        if args.name is None:
+            print("you did not specify a name. snapshot was still created")
+            snapshot.write_snapshot(
+                files_list,
+                args.directory_to_scan,
+                f"{args.directory_to_scan}_{datetime.now().strftime('%Y_%b_%d_%I.%M%p')}",
+            )
+        # or use the name user gave
+        else:
+            print(f"name of snapshot created: {args.name}")
+            snapshot.write_snapshot(files_list, args.directory_to_scan, args.name)
 
     elif args.command == "list":
         print("Listing all snapshots...")
+        snapshot.list_snapshots()
 
     elif args.command == "diff":
         print(f"Comparing snapshots: {args.name1} vs {args.name2}")
 
     elif args.command == "show":
         print(f"Showing snapshot: {args.name}")
+        snapshot.show_snapshot(args.name)
 
     return 0
 
