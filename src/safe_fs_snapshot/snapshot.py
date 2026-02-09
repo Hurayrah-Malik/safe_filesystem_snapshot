@@ -3,14 +3,22 @@ from pathlib import Path
 from datetime import datetime
 
 
+# create a storage directory. if already exists, then dont create new one. return path to it
+def get_storage_dir() -> Path:
+    home = Path.home()
+    snapshot_dir = home / ".safe-fs-snapshot"
+    snapshot_dir.mkdir(exist_ok=True)
+    return snapshot_dir
+
+
 # given a directory, output the list of snapshot containing dictionaries
-def create_snapshot(root_dir: Path) -> list:
+def create_snapshot(directory: Path) -> list:
     # check if this directory is actually on computer
-    verify_directory(root_dir)
+    verify_directory(directory)
 
     # --- Normalize to absolute path ---
     # .resolve() converts relative -> absolute and cleans up ".." and "."
-    root_dir = root_dir.resolve()
+    root_dir = directory.resolve()
     # print("Normalized directory path:", root_dir)
 
     # --- Iterative directory traversal (depth-first using a stack) ---
@@ -97,7 +105,7 @@ def verify_directory(directory: Path):
 
 
 # write the snapshot to the file
-def write_snapshot(snapshot: list, root_dir: Path):
+def write_snapshot(snapshot: list, : Path):
     root_dir = root_dir.resolve()
     created_at = datetime.now().isoformat()
     file_count = len(snapshot)
