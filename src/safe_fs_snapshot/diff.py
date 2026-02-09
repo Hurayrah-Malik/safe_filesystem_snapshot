@@ -65,10 +65,6 @@ def file_changes(snap1_dict: dict, snap2_dict: dict, common_files: set) -> dict:
             )
         else:
             unchanged_files.append(file_path)
-            print(f"{file_path} was unchanged")
+            print(f"{file_path} was unchanged ")
 
     return {"changed_files": changed_files, "unchanged_files": unchanged_files}
-
-
-if __name__ == "__main__":
-    main()

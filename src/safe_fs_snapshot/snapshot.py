@@ -110,10 +110,6 @@ def verify_snapshot_file(snapshot_path: Path):
         print(f"the file: {snapshot_path.stem}, doesnt exist")
         raise SystemExit(1)
 
-    # if not snapshot_path.is_dir():
-    #     print(f"Error: path is not a directory: {}")
-    #     raise SystemExit(1)
-
 
 # write the snapshot to the file
 def write_snapshot(snapshot: list, scanned_directory: Path, snapshot_name: str):
