@@ -19,13 +19,9 @@ def create_snapshot(root_dir: Path) -> list:
     # print("Traversal skeleton:")
     stack = [root_dir]
 
-    dirs_scanned = 0
-
     files_snapshot = []
     while stack:
         current_dir = stack.pop()
-
-        dirs_scanned += 1
 
         # print("Scanning:", current_dir)
         # print("Children of  current_dir :")

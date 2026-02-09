@@ -31,9 +31,10 @@ def main() -> int:
     # If user provides no args, argparse auto-prints error and exits before our code runs
     args = parser.parse_args()
 
+    # extract path variable from args
     root_dir = args.path
 
-    # get the snapshot list
+    # get the snapshot list (its a list of all files that exist in that directory, multi layer search)
     files_snapshot = snapshot.create_snapshot(root_dir)
 
     # write the snapshot list to a json file

@@ -1,0 +1,37 @@
+{
+  "scan_root": "C:/Users/huray/dev/my_project",
+  "created_at": "2026-02-05T14:30:00.000000",
+  "files_count": 6,
+  "files": [
+    {
+      "relative_path": "config.yaml",
+      "size": 410,
+      "mtime": 1738400000.0
+    },
+    {
+      "relative_path": "docs/readme.txt",
+      "size": 1520,
+      "mtime": 1737500000.0
+    },
+    {
+      "relative_path": "src/helpers.py",
+      "size": 560,
+      "mtime": 1738350000.0
+    },
+    {
+      "relative_path": "src/main.py",
+      "size": 2750,
+      "mtime": 1738350000.0
+    },
+    {
+      "relative_path": "src/utils.py",
+      "size": 870,
+      "mtime": 1737800000.0
+    },
+    {
+      "relative_path": "tests/test_main.py",
+      "size": 1400,
+      "mtime": 1738350000.0
+    }
+  ]
+}
