@@ -1,14 +1,7 @@
 import json
 from pathlib import Path
 from datetime import datetime
-
-
-# create a storage directory. if already exists, then dont create new one. return path to it
-def get_storage_dir() -> Path:
-    home = Path.home()
-    snapshot_dir = home / ".safe-fs-snapshot"
-    snapshot_dir.mkdir(exist_ok=True)
-    return snapshot_dir
+from safe_fs_snapshot.storage import get_storage_dir, verify_snapshot_file
 
 
 # given a directory, output the list of snapshot containing dictionaries
@@ -19,20 +12,15 @@ def create_snapshot(directory: Path) -> list:
     # --- Normalize to absolute path ---
     # .resolve() converts relative -> absolute and cleans up ".." and "."
     root_dir = directory.resolve()
-    # print("Normalized directory path:", root_dir)
 
     # --- Iterative directory traversal (depth-first using a stack) ---
     # Stack = list used as a to-do list of directories to scan.
     # pop() from end = depth-first. See python_study.py Concept 6 for details.
-    # print("Traversal skeleton:")
     stack = [root_dir]
 
     files_snapshot = []
     while stack:
         current_dir = stack.pop()
-
-        # print("Scanning:", current_dir)
-        # print("Children of  current_dir :")
 
         # List directory contents. Can fail due to permissions or race conditions.
         # try/except prevents one bad directory from crashing the whole scan.
@@ -52,11 +40,8 @@ def create_snapshot(directory: Path) -> list:
         # Classify each entry and schedule subdirectories for later scanning
         for entry in entries:
             if entry.is_dir():
-                kind = "DIR"
                 stack.append(entry)  # add to stack so it gets scanned later
             elif entry.is_file():
-                kind = "FILE"
-
                 try:
                     relative_path = entry.relative_to(root_dir)
                     entry_stats = entry.stat()
@@ -80,15 +65,8 @@ def create_snapshot(directory: Path) -> list:
                     }
                 )
 
-            else:
-                kind = "OTHER"
-
-            # print(f"- {kind}: {entry.name}")
-
-    # sort the file snapshot by the value of "relative_path" of each dictionary in the list (alphebetically)
+    # sort the file snapshot alphabetically by relative_path
     files_snapshot.sort(key=lambda f: f["relative_path"])
-
-    # print(f"file_snapshot: {files_snapshot}")
 
     return files_snapshot
 
@@ -101,13 +79,6 @@ def verify_directory(directory: Path):
 
     if not directory.is_dir():
         print(f"Error: path is not a directory: {directory}")
-        raise SystemExit(1)
-
-
-# verify that the snapshot file actually exsists
-def verify_snapshot_file(snapshot_path: Path):
-    if not snapshot_path.exists():
-        print(f"the file: {snapshot_path.stem}, doesnt exist")
         raise SystemExit(1)
 
 
@@ -128,21 +99,91 @@ def write_snapshot(snapshot: list, scanned_directory: Path, snapshot_name: str):
         json.dump(wrapper, f, indent=2)
 
 
-# print out the data of a single snapshot
+# print a formatted table of all saved snapshots
 def list_snapshots():
     snapshot_storage_path = get_storage_dir()
-    # get a list of all files in that snapshot directory
-    snapshots = list(snapshot_storage_path.iterdir())
-    for snapshot in snapshots:
-        print(snapshot.stem)
+    # get only .json files, sorted alphabetically
+    snapshots = sorted(snapshot_storage_path.glob("*.json"))
+
+    if not snapshots:
+        print("No snapshots found.")
+        return
+
+    # collect info from each snapshot file
+    rows = []
+    for snap_path in snapshots:
+        with open(snap_path, "r") as f:
+            data = json.load(f)
+        name = snap_path.stem
+        created = data.get("created_at", "unknown")
+        # format the ISO timestamp into a readable date/time
+        if created != "unknown":
+            try:
+                dt = datetime.fromisoformat(created)
+                created = dt.strftime("%Y-%m-%d %I:%M %p")
+            except ValueError:
+                pass
+        files_count = data.get("files_count", "?")
+        directory = data.get("scanned_directory", "?")
+        rows.append((name, created, str(files_count), directory))
+
+    # calculate column widths so everything lines up
+    headers = ("Name", "Created", "Files", "Directory")
+    col_widths = [len(h) for h in headers]
+    for row in rows:
+        for i, val in enumerate(row):
+            if len(val) > col_widths[i]:
+                col_widths[i] = len(val)
+
+    # print header row and separator
+    header_line = "  ".join(h.ljust(col_widths[i]) for i, h in enumerate(headers))
+    print(header_line)
+    print("-" * len(header_line))
+
+    # print each snapshot as a row
+    for row in rows:
+        print("  ".join(val.ljust(col_widths[i]) for i, val in enumerate(row)))
 
 
-# show details of a single snapshot
+# show formatted details of a single snapshot
 def show_snapshot(snapshot_name: str):
     snapshot_file_path = get_storage_dir() / f"{snapshot_name}.json"
-    # check if that snapshot actually
+    # check if that snapshot actually exists
     verify_snapshot_file(snapshot_file_path)
     # open the correct snapshot json, then print out its data
     with open(snapshot_file_path, "r") as f:
         snapshot_data = json.load(f)
-        print(snapshot_data)
+
+    # print snapshot metadata
+    print(f"Snapshot:   {snapshot_name}")
+    print(f"Directory:  {snapshot_data.get('scanned_directory', '?')}")
+    created = snapshot_data.get("created_at", "unknown")
+    if created != "unknown":
+        try:
+            dt = datetime.fromisoformat(created)
+            created = dt.strftime("%Y-%m-%d %I:%M %p")
+        except ValueError:
+            pass
+    print(f"Created:    {created}")
+    print(f"Files:      {snapshot_data.get('files_count', '?')}")
+    print()
+
+    # print each file with its size
+    files = snapshot_data.get("files", [])
+    if not files:
+        print("  (no files)")
+        return
+
+    # calculate column width for aligned output
+    max_path_len = max(len(f["relative_path"]) for f in files)
+    for file_entry in files:
+        path = file_entry["relative_path"]
+        size = file_entry["size"]
+        # format size in a human-readable way
+        if size < 1024:
+            size_str = f"{size} B"
+        elif size < 1024 * 1024:
+            size_str = f"{size / 1024:.1f} KB"
+        else:
+            size_str = f"{size / (1024 * 1024):.1f} MB"
+        print(f"  {path.ljust(max_path_len)}  {size_str}")

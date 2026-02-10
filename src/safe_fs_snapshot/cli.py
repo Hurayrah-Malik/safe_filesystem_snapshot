@@ -12,6 +12,7 @@ Example commands:
 import argparse  # Built-in module for reading command-line arguments
 from pathlib import Path  # Object-oriented filesystem paths
 from safe_fs_snapshot import snapshot
+from safe_fs_snapshot import diff
 from datetime import datetime
 
 
@@ -109,32 +110,26 @@ def main() -> int:
     # This is the if/elif chain we talked about!
     if args.command == "scan":
         # create a snapshot of the directory
-        print(f"Scanning directory: {args.directory_to_scan}")
         files_list = snapshot.create_snapshot(args.directory_to_scan)
 
-        # write the snapshot to the computer.
-        # if user didnt specify name, then name yourself
+        # if user didnt specify a name, auto-generate one from directory + timestamp
         if args.name is None:
-            print("you did not specify a name. snapshot was still created")
-            snapshot.write_snapshot(
-                files_list,
-                args.directory_to_scan,
-                f"{args.directory_to_scan}_{datetime.now().strftime('%Y_%b_%d_%I.%M%p')}",
-            )
-        # or use the name user gave
+            auto_name = f"{args.directory_to_scan}_{datetime.now().strftime('%Y_%b_%d_%I.%M%p')}"
+            snapshot.write_snapshot(files_list, args.directory_to_scan, auto_name)
+            print(f"Snapshot saved: {auto_name} ({len(files_list)} files)")
         else:
-            print(f"name of snapshot created: {args.name}")
             snapshot.write_snapshot(files_list, args.directory_to_scan, args.name)
+            print(f"Snapshot saved: {args.name} ({len(files_list)} files)")
 
     elif args.command == "list":
-        print("Listing all snapshots...")
         snapshot.list_snapshots()
 
     elif args.command == "diff":
-        print(f"Comparing snapshots: {args.name1} vs {args.name2}")
+        print(f"Comparing: {args.name1} vs {args.name2}")
+        print()
+        diff.compare_snapshots(args.name1, args.name2)
 
     elif args.command == "show":
-        print(f"Showing snapshot: {args.name}")
         snapshot.show_snapshot(args.name)
 
     return 0

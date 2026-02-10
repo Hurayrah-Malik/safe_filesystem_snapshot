@@ -1,3 +1,0 @@
-TODO: Add more features
-TODO: Write tests
-TODO: Update documentation
